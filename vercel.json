@@ -1,5 +1,3 @@
 {
-  "functions": {
-    "api/explain.py": {}
-  }
+  "version": 2
 }
