@@ -1,7 +1,5 @@
 {
   "functions": {
-    "api/explain.py": {
-      "runtime": "python3.12"
-    }
+    "api/explain.py": {}
   }
 }
