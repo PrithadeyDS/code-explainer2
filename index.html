@@ -1,185 +1,887 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AI Code Explainer</title>
-<style>
-  * { box-sizing: border-box; }
-  body {
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-    background: #0f172a;
-    color: #e2e8f0;
-    margin: 0;
-    padding: 2rem 1rem;
-  }
-  .wrap { max-width: 800px; margin: 0 auto; }
-  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
-  p.sub { color: #94a3b8; margin-top: 0; margin-bottom: 1.5rem; }
-  textarea {
-    width: 100%;
-    height: 260px;
-    background: #1e293b;
-    color: #e2e8f0;
-    border: 1px solid #334155;
-    border-radius: 8px;
-    padding: 1rem;
-    font-family: "Fira Code", Menlo, monospace;
-    font-size: 0.9rem;
-    resize: vertical;
-  }
-  .controls {
-    display: flex;
-    gap: 0.75rem;
-    margin: 1rem 0;
-    flex-wrap: wrap;
-    align-items: center;
-  }
-  select, button {
-    padding: 0.6rem 1rem;
-    border-radius: 8px;
-    border: 1px solid #334155;
-    font-size: 0.9rem;
-    cursor: pointer;
-  }
-  select { background: #1e293b; color: #e2e8f0; }
-  button {
-    background: #6366f1;
-    color: white;
-    border: none;
-    font-weight: 600;
-  }
-  button:hover { background: #4f46e5; }
-  button:disabled { background: #475569; cursor: not-allowed; }
-  button.secondary { background: #334155; }
-  button.secondary:hover { background: #475569; }
-  .card {
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 10px;
-    padding: 1.25rem;
-    margin-top: 1rem;
-  }
-  .card h3 { margin-top: 0; color: #a5b4fc; }
-  .card pre {
-    background: #0f172a;
-    padding: 0.75rem;
-    border-radius: 6px;
-    overflow-x: auto;
-    white-space: pre-wrap;
-  }
-  ul { padding-left: 1.2rem; }
-  #status { color: #94a3b8; margin-top: 0.5rem; min-height: 1.2em; }
-  #error { color: #f87171; margin-top: 0.5rem; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>CodeLens</title>
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "DM Sans", sans-serif;
+
+      background:
+        radial-gradient(circle at top left, #fdecef 0, transparent 35%),
+        radial-gradient(circle at bottom right, #eef4ea 0, transparent 35%),
+        #fff9f9;
+
+      color: #3f3639;
+      min-height: 100vh;
+      padding: 55px 20px;
+    }
+
+    .container {
+      width: min(100%, 950px);
+      margin: 0 auto;
+    }
+
+    /* HEADER */
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-family: "Playfair Display", serif;
+      font-size: clamp(3rem, 7vw, 5rem);
+      color: #b87585;
+      letter-spacing: -2px;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      color: #89777d;
+      font-size: 1rem;
+      letter-spacing: 0.2px;
+    }
+
+    /* MAIN CARD */
+
+    .card {
+      background: rgba(255, 255, 255, 0.88);
+
+      border: 1px solid #efdde1;
+      border-radius: 24px;
+
+      padding: 28px;
+
+      box-shadow:
+        0 15px 40px rgba(145, 101, 113, 0.08);
+
+      backdrop-filter: blur(10px);
+
+      margin-bottom: 20px;
+    }
+
+    /* LABELS */
+
+    label {
+      display: block;
+
+      font-size: 0.9rem;
+      font-weight: 600;
+
+      color: #5e5055;
+
+      margin-bottom: 9px;
+    }
+
+    /* CODE TEXTAREA */
+
+    textarea {
+      width: 100%;
+      min-height: 330px;
+
+      resize: vertical;
+
+      border: 1px solid #e8d4d9;
+      border-radius: 16px;
+
+      background: #fffafa;
+
+      padding: 18px;
+
+      font-family: "Courier New", monospace;
+      font-size: 0.95rem;
+      line-height: 1.6;
+
+      color: #403639;
+
+      outline: none;
+
+      transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    textarea::placeholder {
+      color: #b9a7ac;
+    }
+
+    textarea:focus {
+      border-color: #d89aaa;
+
+      box-shadow:
+        0 0 0 4px rgba(216, 154, 170, 0.13);
+    }
+
+    /* CONTROLS */
+
+    .controls {
+      margin-top: 22px;
+    }
+
+    .language-box {
+      max-width: 230px;
+      margin-bottom: 20px;
+    }
+
+    select {
+      width: 100%;
+
+      border: 1px solid #e8d4d9;
+      border-radius: 13px;
+
+      background: #fffafa;
+
+      padding: 12px 14px;
+
+      font-family: "DM Sans", sans-serif;
+      font-size: 0.9rem;
+
+      color: #493e42;
+
+      outline: none;
+      cursor: pointer;
+
+      transition: 0.2s ease;
+    }
+
+    select:focus {
+      border-color: #d89aaa;
+
+      box-shadow:
+        0 0 0 4px rgba(216, 154, 170, 0.13);
+    }
+
+    /* BUTTONS */
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      border: none;
+      border-radius: 13px;
+
+      padding: 12px 21px;
+
+      font-family: "DM Sans", sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+
+      cursor: pointer;
+
+      transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* EXPLAIN BUTTON */
+
+    #btnExplain {
+      background: #dea2b0;
+      color: white;
+
+      box-shadow:
+        0 8px 20px rgba(203, 130, 147, 0.24);
+    }
+
+    #btnExplain:hover {
+      background: #cf8e9e;
+    }
+
+    /* SECONDARY BUTTONS */
+
+    #btnImprove,
+    #btnOptimize {
+      background: #edf3e9;
+      color: #5f7059;
+    }
+
+    #btnImprove:hover,
+    #btnOptimize:hover {
+      background: #dfe9da;
+    }
+
+    /* STATUS */
+
+    #status {
+      text-align: center;
+
+      color: #a96f7e;
+
+      font-weight: 600;
+      font-size: 0.9rem;
+
+      margin: 18px 0;
+    }
+
+    /* ERROR */
+
+    #error {
+      background: #fff0f2;
+
+      border: 1px solid #efc8d0;
+      border-radius: 14px;
+
+      color: #a65367;
+
+      padding: 13px 16px;
+
+      margin: 18px 0;
+    }
+
+    #error:empty {
+      display: none;
+    }
+
+    /* OUTPUT */
+
+    #output {
+      margin-top: 28px;
+    }
+
+    #output .card {
+      padding: 23px 25px;
+
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    #output .card:hover {
+      transform: translateY(-2px);
+
+      box-shadow:
+        0 18px 45px rgba(145, 101, 113, 0.1);
+    }
+
+    #output h3 {
+      font-family: "Playfair Display", serif;
+
+      color: #a96f7e;
+
+      font-size: 1.35rem;
+
+      margin-bottom: 10px;
+    }
+
+    #output p {
+      color: #6e6065;
+
+      line-height: 1.7;
+    }
+
+    #output ul {
+      padding-left: 22px;
+
+      color: #66595e;
+
+      line-height: 1.7;
+    }
+
+    #output li {
+      margin-bottom: 8px;
+    }
+
+    /* CODE RESULTS */
+
+    pre {
+      background: #faf4f5;
+
+      border: 1px solid #eadadd;
+      border-radius: 14px;
+
+      padding: 18px;
+
+      overflow-x: auto;
+
+      font-family: "Courier New", monospace;
+      font-size: 0.9rem;
+
+      line-height: 1.6;
+
+      color: #493e42;
+    }
+
+    code {
+      font-family: "Courier New", monospace;
+    }
+
+    /* FOOTER */
+
+    .footer {
+      text-align: center;
+
+      margin-top: 35px;
+
+      color: #aa989e;
+
+      font-size: 0.8rem;
+    }
+
+    /* MOBILE */
+
+    @media (max-width: 650px) {
+
+      body {
+        padding: 30px 14px;
+      }
+
+      .header {
+        margin-bottom: 28px;
+      }
+
+      h1 {
+        font-size: 3.2rem;
+      }
+
+      .card {
+        padding: 20px;
+        border-radius: 19px;
+      }
+
+      textarea {
+        min-height: 260px;
+      }
+
+      .language-box {
+        max-width: 100%;
+      }
+
+      .actions {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+
+  </style>
 </head>
+
+
 <body>
-<div class="wrap">
-  <h1>🧠 AI Code Explainer</h1>
-  <p class="sub">Paste code, pick a language, and get a beginner-friendly breakdown.</p>
 
-  <textarea id="code" placeholder="Paste your code here..."></textarea>
+  <div class="container">
 
-  <div class="controls">
-    <select id="language">
-      <option>Python</option>
-      <option>C++</option>
-      <option>Java</option>
-      <option>JavaScript</option>
-    </select>
-    <button id="btnExplain">Explain Code</button>
-    <button id="btnImprove" class="secondary">Improve This Code</button>
-    <button id="btnOptimize" class="secondary">Optimize Code</button>
+    <!-- HEADER -->
+
+    <header class="header">
+
+      <h1>CodeLens</h1>
+
+      <p class="subtitle">
+        Understand your code. Improve it. Optimize it.
+      </p>
+
+    </header>
+
+
+    <!-- CODE INPUT -->
+
+    <main>
+
+      <div class="card">
+
+        <label for="code">
+          Your code
+        </label>
+
+        <textarea
+          id="code"
+          placeholder="Paste your code here..."
+        ></textarea>
+
+
+        <div class="controls">
+
+          <div class="language-box">
+
+            <label for="language">
+              Language
+            </label>
+
+            <select id="language">
+
+              <option>Python</option>
+              <option>C++</option>
+              <option>Java</option>
+              <option>JavaScript</option>
+
+            </select>
+
+          </div>
+
+
+          <div class="actions">
+
+            <button id="btnExplain">
+              Explain Code
+            </button>
+
+            <button id="btnImprove">
+              Improve Code
+            </button>
+
+            <button id="btnOptimize">
+              Optimize Code
+            </button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <!-- STATUS / ERRORS -->
+
+      <div id="status"></div>
+
+      <div id="error"></div>
+
+
+      <!-- AI OUTPUT -->
+
+      <div id="output"></div>
+
+    </main>
+
+
+    <footer class="footer">
+      CodeLens
+    </footer>
+
   </div>
 
-  <div id="status"></div>
-  <div id="error"></div>
-  <div id="output"></div>
-</div>
 
-<script>
-const codeEl = document.getElementById('code');
-const langEl = document.getElementById('language');
-const statusEl = document.getElementById('status');
-const errorEl = document.getElementById('error');
-const outputEl = document.getElementById('output');
-const buttons = [document.getElementById('btnExplain'), document.getElementById('btnImprove'), document.getElementById('btnOptimize')];
 
-async function run(action) {
-  const code = codeEl.value.trim();
-  errorEl.textContent = '';
-  outputEl.innerHTML = '';
-  if (!code) {
-    errorEl.textContent = 'Please paste some code first.';
-    return;
-  }
+  <script>
 
-  buttons.forEach(b => b.disabled = true);
-  statusEl.textContent = 'Thinking...';
+    const codeEl =
+      document.getElementById('code');
 
-  try {
-    const res = await fetch('/api/explain', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code, language: langEl.value, action })
-    });
-    const data = await res.json();
-    statusEl.textContent = '';
+    const langEl =
+      document.getElementById('language');
 
-    if (!res.ok) {
-      errorEl.textContent = data.error || 'Something went wrong.';
-      return;
+    const statusEl =
+      document.getElementById('status');
+
+    const errorEl =
+      document.getElementById('error');
+
+    const outputEl =
+      document.getElementById('output');
+
+
+    const buttons = [
+
+      document.getElementById('btnExplain'),
+
+      document.getElementById('btnImprove'),
+
+      document.getElementById('btnOptimize')
+
+    ];
+
+
+    async function run(action) {
+
+      const code = codeEl.value.trim();
+
+      errorEl.textContent = '';
+
+      outputEl.innerHTML = '';
+
+
+      if (!code) {
+
+        errorEl.textContent =
+          'Please paste some code first.';
+
+        return;
+
+      }
+
+
+      buttons.forEach(button => {
+
+        button.disabled = true;
+
+      });
+
+
+      statusEl.textContent =
+        'Analyzing your code...';
+
+
+      try {
+
+        const res =
+          await fetch('/api/explain', {
+
+            method: 'POST',
+
+            headers: {
+
+              'Content-Type':
+                'application/json'
+
+            },
+
+            body: JSON.stringify({
+
+              code: code,
+
+              language: langEl.value,
+
+              action: action
+
+            })
+
+          });
+
+
+        const data =
+          await res.json();
+
+
+        statusEl.textContent = '';
+
+
+        if (!res.ok) {
+
+          errorEl.textContent =
+            data.error ||
+            'Something went wrong.';
+
+          return;
+
+        }
+
+
+        render(
+          action,
+          data.result
+        );
+
+
+      } catch (error) {
+
+        statusEl.textContent = '';
+
+        errorEl.textContent =
+          'Network error: ' +
+          error.message;
+
+
+      } finally {
+
+        buttons.forEach(button => {
+
+          button.disabled = false;
+
+        });
+
+      }
+
     }
-    render(action, data.result);
-  } catch (e) {
-    statusEl.textContent = '';
-    errorEl.textContent = 'Network error: ' + e.message;
-  } finally {
-    buttons.forEach(b => b.disabled = false);
-  }
-}
 
-function render(action, r) {
-  if (r.raw) {
-    outputEl.innerHTML = `<div class="card"><pre>${escapeHtml(r.raw)}</pre></div>`;
-    return;
-  }
 
-  if (action === 'explain') {
-    outputEl.innerHTML = `
-      <div class="card"><h3>What it does</h3><p>${escapeHtml(r.what_it_does || '')}</p></div>
-      <div class="card"><h3>How it works</h3><p>${escapeHtml(r.how_it_works || '')}</p></div>
-      <div class="card"><h3>⏱ Time complexity</h3><p>${escapeHtml(r.time_complexity || '')}</p></div>
-      <div class="card"><h3>💾 Space complexity</h3><p>${escapeHtml(r.space_complexity || '')}</p></div>
-      <div class="card"><h3>🔑 Key functions/variables</h3>
-        <ul>${(r.key_parts || []).map(k => `<li>${escapeHtml(k)}</li>`).join('')}</ul>
-      </div>`;
-  } else if (action === 'improve') {
-    outputEl.innerHTML = `
-      <div class="card"><h3>⚠️ Issues found</h3>
-        <ul>${(r.issues || []).map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>
-      </div>
-      <div class="card"><h3>✅ Suggestions</h3>
-        <ul>${(r.suggestions || []).map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ul>
-      </div>`;
-  } else if (action === 'optimize') {
-    outputEl.innerHTML = `
-      <div class="card"><h3>🚀 Optimized code</h3><pre>${escapeHtml(r.optimized_code || '')}</pre></div>
-      <div class="card"><h3>What changed</h3><p>${escapeHtml(r.what_changed || '')}</p></div>
-      <div class="card"><h3>New time complexity</h3><p>${escapeHtml(r.new_time_complexity || '')}</p></div>
-      <div class="card"><h3>New space complexity</h3><p>${escapeHtml(r.new_space_complexity || '')}</p></div>`;
-  }
-}
 
-function escapeHtml(str) {
-  const div = document.createElement('div');
-  div.innerText = str;
-  return div.innerHTML;
-}
+    function render(action, result) {
 
-document.getElementById('btnExplain').onclick = () => run('explain');
-document.getElementById('btnImprove').onclick = () => run('improve');
-document.getElementById('btnOptimize').onclick = () => run('optimize');
-</script>
+      if (result.raw) {
+
+        outputEl.innerHTML = `
+
+          <div class="card">
+
+            <h3>Result</h3>
+
+            <pre>${escapeHtml(result.raw)}</pre>
+
+          </div>
+
+        `;
+
+        return;
+
+      }
+
+
+
+      /* EXPLAIN */
+
+      if (action === 'explain') {
+
+        outputEl.innerHTML = `
+
+          <div class="card">
+
+            <h3>What it does</h3>
+
+            <p>
+              ${escapeHtml(
+                result.what_it_does || ''
+              )}
+            </p>
+
+          </div>
+
+
+          <div class="card">
+
+            <h3>How it works</h3>
+
+            <p>
+              ${escapeHtml(
+                result.how_it_works || ''
+              )}
+            </p>
+
+          </div>
+
+
+          <div class="card">
+
+            <h3>Time complexity</h3>
+
+            <p>
+              ${escapeHtml(
+                result.time_complexity || ''
+              )}
+            </p>
+
+          </div>
+
+
+          <div class="card">
+
+            <h3>Space complexity</h3>
+
+            <p>
+              ${escapeHtml(
+                result.space_complexity || ''
+              )}
+            </p>
+
+          </div>
+
+
+          <div class="card">
+
+            <h3>
+              Key functions and variables
+            </h3>
+
+            <ul>
+
+              ${
+                (result.key_parts || [])
+                  .map(
+                    part =>
+                      `<li>${escapeHtml(part)}</li>`
+                  )
+                  .join('')
+              }
+
+            </ul>
+
+          </div>
+
+        `;
+
+      }
+
+
+
+      /* IMPROVE */
+
+      else if (action === 'improve') {
+
+        outputEl.innerHTML = `
+
+          <div class="card">
+
+            <h3>Issues found</h3>
+
+            <ul>
+
+              ${
+                (result.issues || [])
+                  .map(
+                    issue =>
+                      `<li>${escapeHtml(issue)}</li>`
+                  )
+                  .join('')
+              }
+
+            </ul>
+
+          </div>
+
+
+          <div class="card">
+
+            <h3>Suggestions</h3>
+
+            <ul>
+
+              ${
+                (result.suggestions || [])
+                  .map(
+                    suggestion =>
+                      `<li>${escapeHtml(suggestion)}</li>`
+                  )
+                  .join('')
+              }
+
+            </ul>
+
+          </div>
+
+        `;
+
+      }
+
+
+
+      /* OPTIMIZE */
+
+      else if (action === 'optimize') {
+
+        outputEl.innerHTML = `
+
+          <div class="card">
+
+            <h3>Optimized code</h3>
+
+            <pre>${escapeHtml(
+              result.optimized_code || ''
+            )}</pre>
+
+          </div>
+
+
+          <div class="card">
+
+            <h3>What changed</h3>
+
+            <p>
+              ${escapeHtml(
+                result.what_changed || ''
+              )}
+            </p>
+
+          </div>
+
+
+          <div class="card">
+
+            <h3>
+              New time complexity
+            </h3>
+
+            <p>
+              ${escapeHtml(
+                result.new_time_complexity || ''
+              )}
+            </p>
+
+          </div>
+
+
+          <div class="card">
+
+            <h3>
+              New space complexity
+            </h3>
+
+            <p>
+              ${escapeHtml(
+                result.new_space_complexity || ''
+              )}
+            </p>
+
+          </div>
+
+        `;
+
+      }
+
+    }
+
+
+
+    function escapeHtml(str) {
+
+      const div =
+        document.createElement('div');
+
+      div.innerText =
+        String(str ?? '');
+
+      return div.innerHTML;
+
+    }
+
+
+
+    document
+      .getElementById('btnExplain')
+      .onclick =
+        () => run('explain');
+
+
+    document
+      .getElementById('btnImprove')
+      .onclick =
+        () => run('improve');
+
+
+    document
+      .getElementById('btnOptimize')
+      .onclick =
+        () => run('optimize');
+
+  </script>
+
 </body>
+
 </html>
+```
