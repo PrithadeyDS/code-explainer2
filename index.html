@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Code Explainer</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    background: #0f172a;
+    color: #e2e8f0;
+    margin: 0;
+    padding: 2rem 1rem;
+  }
+  .wrap { max-width: 800px; margin: 0 auto; }
+  h1 { font-size: 1.6rem; margin-bottom: 0.25rem; }
+  p.sub { color: #94a3b8; margin-top: 0; margin-bottom: 1.5rem; }
+  textarea {
+    width: 100%;
+    height: 260px;
+    background: #1e293b;
+    color: #e2e8f0;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 1rem;
+    font-family: "Fira Code", Menlo, monospace;
+    font-size: 0.9rem;
+    resize: vertical;
+  }
+  .controls {
+    display: flex;
+    gap: 0.75rem;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  select, button {
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    font-size: 0.9rem;
+    cursor: pointer;
+  }
+  select { background: #1e293b; color: #e2e8f0; }
+  button {
+    background: #6366f1;
+    color: white;
+    border: none;
+    font-weight: 600;
+  }
+  button:hover { background: #4f46e5; }
+  button:disabled { background: #475569; cursor: not-allowed; }
+  button.secondary { background: #334155; }
+  button.secondary:hover { background: #475569; }
+  .card {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 10px;
+    padding: 1.25rem;
+    margin-top: 1rem;
+  }
+  .card h3 { margin-top: 0; color: #a5b4fc; }
+  .card pre {
+    background: #0f172a;
+    padding: 0.75rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+  }
+  ul { padding-left: 1.2rem; }
+  #status { color: #94a3b8; margin-top: 0.5rem; min-height: 1.2em; }
+  #error { color: #f87171; margin-top: 0.5rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🧠 AI Code Explainer</h1>
+  <p class="sub">Paste code, pick a language, and get a beginner-friendly breakdown.</p>
+
+  <textarea id="code" placeholder="Paste your code here..."></textarea>
+
+  <div class="controls">
+    <select id="language">
+      <option>Python</option>
+      <option>C++</option>
+      <option>Java</option>
+      <option>JavaScript</option>
+    </select>
+    <button id="btnExplain">Explain Code</button>
+    <button id="btnImprove" class="secondary">Improve This Code</button>
+    <button id="btnOptimize" class="secondary">Optimize Code</button>
+  </div>
+
+  <div id="status"></div>
+  <div id="error"></div>
+  <div id="output"></div>
+</div>
+
+<script>
+const codeEl = document.getElementById('code');
+const langEl = document.getElementById('language');
+const statusEl = document.getElementById('status');
+const errorEl = document.getElementById('error');
+const outputEl = document.getElementById('output');
+const buttons = [document.getElementById('btnExplain'), document.getElementById('btnImprove'), document.getElementById('btnOptimize')];
+
+async function run(action) {
+  const code = codeEl.value.trim();
+  errorEl.textContent = '';
+  outputEl.innerHTML = '';
+  if (!code) {
+    errorEl.textContent = 'Please paste some code first.';
+    return;
+  }
+
+  buttons.forEach(b => b.disabled = true);
+  statusEl.textContent = 'Thinking...';
+
+  try {
+    const res = await fetch('/api/explain', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code, language: langEl.value, action })
+    });
+    const data = await res.json();
+    statusEl.textContent = '';
+
+    if (!res.ok) {
+      errorEl.textContent = data.error || 'Something went wrong.';
+      return;
+    }
+    render(action, data.result);
+  } catch (e) {
+    statusEl.textContent = '';
+    errorEl.textContent = 'Network error: ' + e.message;
+  } finally {
+    buttons.forEach(b => b.disabled = false);
+  }
+}
+
+function render(action, r) {
+  if (r.raw) {
+    outputEl.innerHTML = `<div class="card"><pre>${escapeHtml(r.raw)}</pre></div>`;
+    return;
+  }
+
+  if (action === 'explain') {
+    outputEl.innerHTML = `
+      <div class="card"><h3>What it does</h3><p>${escapeHtml(r.what_it_does || '')}</p></div>
+      <div class="card"><h3>How it works</h3><p>${escapeHtml(r.how_it_works || '')}</p></div>
+      <div class="card"><h3>⏱ Time complexity</h3><p>${escapeHtml(r.time_complexity || '')}</p></div>
+      <div class="card"><h3>💾 Space complexity</h3><p>${escapeHtml(r.space_complexity || '')}</p></div>
+      <div class="card"><h3>🔑 Key functions/variables</h3>
+        <ul>${(r.key_parts || []).map(k => `<li>${escapeHtml(k)}</li>`).join('')}</ul>
+      </div>`;
+  } else if (action === 'improve') {
+    outputEl.innerHTML = `
+      <div class="card"><h3>⚠️ Issues found</h3>
+        <ul>${(r.issues || []).map(i => `<li>${escapeHtml(i)}</li>`).join('')}</ul>
+      </div>
+      <div class="card"><h3>✅ Suggestions</h3>
+        <ul>${(r.suggestions || []).map(s => `<li>${escapeHtml(s)}</li>`).join('')}</ul>
+      </div>`;
+  } else if (action === 'optimize') {
+    outputEl.innerHTML = `
+      <div class="card"><h3>🚀 Optimized code</h3><pre>${escapeHtml(r.optimized_code || '')}</pre></div>
+      <div class="card"><h3>What changed</h3><p>${escapeHtml(r.what_changed || '')}</p></div>
+      <div class="card"><h3>New time complexity</h3><p>${escapeHtml(r.new_time_complexity || '')}</p></div>
+      <div class="card"><h3>New space complexity</h3><p>${escapeHtml(r.new_space_complexity || '')}</p></div>`;
+  }
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.innerText = str;
+  return div.innerHTML;
+}
+
+document.getElementById('btnExplain').onclick = () => run('explain');
+document.getElementById('btnImprove').onclick = () => run('improve');
+document.getElementById('btnOptimize').onclick = () => run('optimize');
+</script>
+</body>
+</html>
